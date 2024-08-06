@@ -6,6 +6,7 @@ import io
 #importar função de uma pasta no nível acima
 import sys
 import os
+import openpyxl
 
 st.set_page_config(
     page_title="Acompanhameto de Produtos",

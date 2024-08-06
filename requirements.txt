@@ -1,0 +1,10 @@
+streamlit
+streamlit_authenticator
+streamlit-aggrid
+plotly.express
+openpyxl
+xlsxwriter
+pandas
+numpy
+requests
+beautifulsoup4
