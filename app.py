@@ -7,6 +7,7 @@ import io
 import sys
 import os
 import openpyxl
+import f_funcoes as fun
 
 st.set_page_config(
     page_title="Acompanhameto de Produtos",
@@ -18,6 +19,9 @@ st.set_page_config(
 st.header("Acompanhamento de Produtos Shopify", divider="blue")
 
 df = pd.read_csv('arquivos/dados_prods_.csv', sep=';', encoding='utf-8')
+df_prod = fun.produtos()
+
+df_prod = df_prod[['Cod. Prod.', 'Desc. Produto']]
 
 col4, col5, col6 = st.columns([1, 1, 1])
 
@@ -134,7 +138,7 @@ colecoes = [
 ]
 
 with col1:
-    option = st.selectbox("Selecione a opção desejada:", ["Produtos sem descrição", "Produtos sem imagem", "Produtos sem composição"])
+    option = st.selectbox("Selecione a opção desejada:", ["Produtos sem descrição", "Produtos sem imagem", "Produtos sem composição", "Todos"])
 
 if option == "Produtos sem descrição":
     st.subheader("Produtos sem descrição:")
@@ -142,8 +146,14 @@ if option == "Produtos sem descrição":
     df_filtered = df_descricao.copy()
     qtd_produtos = df_filtered.shape[0]
     df_filtered = df_filtered[colunas_comuns]
+    df_filtered = pd.merge(df_filtered, df_prod, left_on='sku', right_on='Cod. Prod.', how='left')
+    #passar a coluna Desc. Produto para a terceira posição
+    cols = df_filtered.columns.tolist()
+    cols = cols[:2] + cols[-1:] + cols[2:-1]
+    df_filtered = df_filtered[cols]
+    df_filtered['Novo Título'] = ""
     df_filtered['Desc. Mkt'] = ""
-    df_filtered = df_filtered.rename(columns={'sku': 'SKU', 'title': 'Título'})
+    df_filtered = df_filtered.rename(columns={'sku': 'SKU', 'title': 'Título no Shopify'})
     df_filtered = df_filtered.reset_index(drop=True)
 
     colecoes_filt = df_filtered['Colecao'].unique().tolist()
@@ -174,7 +184,7 @@ elif option == "Produtos sem imagem":
     df_filtered = df_imagem.copy()
     qtd_imagens = df_filtered.shape[0]
     df_filtered = df_filtered[colunas_comuns]
-    df_filtered = df_filtered.rename(columns={'mediaCount.count': 'Imagens', 'sku': 'SKU', 'title': 'Título'})
+    df_filtered = df_filtered.rename(columns={'mediaCount.count': 'Imagens', 'sku': 'SKU', 'title': 'Título no Shopify'})
     df_filtered = df_filtered.reset_index(drop=True)
 
     colecoes_filt = df_filtered['Colecao'].unique().tolist()
@@ -205,7 +215,7 @@ elif option == "Produtos sem composição":
     df_filtered = df_composicao.copy()
     qtd_composicao = df_filtered.shape[0]
     df_filtered = df_filtered[colunas_comuns]
-    df_filtered = df_filtered.rename(columns={'metafield.value': 'Composição', 'sku': 'SKU', 'title': 'Título'})
+    df_filtered = df_filtered.rename(columns={'metafield.value': 'Composição', 'sku': 'SKU', 'title': 'Título no Shopify'})
     df_filtered = df_filtered.reset_index(drop=True)
 
     colecoes_filt = df_filtered['Colecao'].unique().tolist()
@@ -227,5 +237,42 @@ elif option == "Produtos sem composição":
         label="Download dados em Excel",
         data=excel_file,
         file_name='produtos_sem_composicao.xlsx',
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    
+elif option == "Todos":
+    st.subheader("Todos os produtos:")
+
+    df_filtered = df.copy()
+    df_filtered = df_filtered[colunas_comuns]
+    df_filtered = pd.merge(df_filtered, df_prod, left_on='sku', right_on='Cod. Prod.', how='left')
+    #passar a coluna Desc. Produto para a terceira posição
+    cols = df_filtered.columns.tolist()
+    cols = cols[:2] + cols[-1:] + cols[2:-1]
+    df_filtered = df_filtered[cols]
+    df_filtered['Novo Título'] = ""
+    df_filtered['Desc. Mkt'] = ""
+    df_filtered = df_filtered.rename(columns={'sku': 'SKU', 'title': 'Título no Shopify'})
+    df_filtered = df_filtered.reset_index(drop=True)
+
+    colecoes_filt = df_filtered['Colecao'].unique().tolist()
+    colecoes_filt.insert(0, "Todas")
+
+    with col2:
+        option2 = st.selectbox("Selecione a coleção desejada:", colecoes_filt)
+
+    if option2 != "Todas":
+        df_filtered = df_filtered[df_filtered['Colecao'] == option2]
+    st.dataframe(df_filtered)
+
+    # Export to Excel
+    excel_file = io.BytesIO()
+    with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+        df_filtered.to_excel(writer, index=False)
+    excel_file.seek(0)
+    st.download_button(
+        label="Download dados em Excel",
+        data=excel_file,
+        file_name='todos_produtos.xlsx',
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
