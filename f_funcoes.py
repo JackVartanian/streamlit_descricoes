@@ -7,9 +7,6 @@ import pandas as pd
 import pymssql
 import requests
 from numpy import where
-import pymssql
-
-
 
 def vendas_capta():
     url = "http://jackvartanian.net/cms/wp-content/uploads/datasets/vendas_gzip.csv"
