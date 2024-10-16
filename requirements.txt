@@ -8,7 +8,4 @@ pandas
 numpy
 requests
 beautifulsoup4
-ftplib
-io
-time
 pymssql
